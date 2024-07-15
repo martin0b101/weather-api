@@ -1,0 +1,19 @@
+{
+    "xmls" : [
+        {
+            "city" : "Rijeka",
+            "xml-url": "https://meteo.arso.gov.si/uploads/probase/www/fproduct/text/sl/forecast_RIJEKA_OMISALJ_latest.xml"
+        },
+
+        {
+            "city" : "Zadar",
+            "xml-url": "https://meteo.arso.gov.si/uploads/probase/www/fproduct/text/sl/forecast_ZADAR-PUN_latest.xml"
+        },
+
+        {
+            "city" : "Split",
+            "xml-url": "https://meteo.arso.gov.si/uploads/probase/www/fproduct/text/sl/forecast_SPLIT_MARJAN_latest.xml"
+        }
+
+    ]
+}
