@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/xml"
 	"io"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -37,74 +38,61 @@ func parseXMLToStruct(xmlURL string) (*types.Data, error) {
 }
 
 
-func ParseCityFromXml(url string) (*types.City, error){
-	data, errorParse := parseXMLToStruct(url)
-	
-	if(errorParse != nil){
-		return nil, errorParse
-	}
+func ParseCityFromXml(url string) (*types.City, error) {
+    data, err := parseXMLToStruct(url)
+    if err != nil {
+        return nil, err
+    }
 
-	weatherArray := []types.Weather{}
-	cityItem := types.City{}
+    var city types.City
+    var weather []types.Weather
 
-	for _, item := range data.MetaData {
+    for _, item := range data.MetaData {
+        if city.City == "" {
+            layout := "02.01.2006 15:04 UTC"
+            timeUpdated, err := time.Parse(layout, item.UpdatedAtUTC)
+            if err != nil {
+                return nil, err
+            }
+            city = types.City{
+                City:     item.City,
+                Country:  strings.ToLower(item.CountyCode),
+                UpdatedAt: timeUpdated.Unix(),
+            }
+        }
 
-		var iconUrl = data.IconURLBase
+        iconURL := data.IconURLBase
+        windIcon := fmt.Sprintf("%s%s.%s", iconURL, item.IconWind, data.IconFormat)
+        weatherIcon := fmt.Sprintf("%s%s.%s", iconURL, item.Icon, data.IconFormat)
 
-		temp := types.WeatherTemp{
-			Low: item.LowTemp,
-			Max: item.MaxTemp,
-			Unit: item.LowTempUnit,
-		}
+        temp := types.WeatherTemp{
+            Low:  item.LowTemp,
+            Max:  item.MaxTemp,
+            Unit: item.LowTempUnit,
+        }
 
-		wind := types.WeatherWind{
-			Icon: iconUrl+item.IconWind+"."+data.IconFormat,
-			Direction: item.WindDirection,
-			DirectionLong:  item.WindDirectionLong,
-			Speed: item.WindSpeed,
-			Unit: item.WindUnit,
-		}
+        wind := types.WeatherWind{
+            Icon:           windIcon,
+            Direction:      item.WindDirection,
+            DirectionLong:  item.WindDirectionLong,
+            Speed:          item.WindSpeed,
+            Unit:           item.WindUnit,
+        }
 
+        day := strings.Split(item.Day, " ")[0]
+        weather = append(weather, types.Weather{
+            Day:   day,
+            Valid: item.Valid,
+            Icon:  weatherIcon,
+            Temp:  temp,
+            Wind:  wind,
+        })
+    }
 
-		var dayParsed = strings.Split(item.Day, " ")
-
-
-		weatherItem := types.Weather{ 
-			Day: dayParsed[0], 
-			Valid: item.Valid, 
-			Icon: iconUrl +item.Icon+"."+ data.IconFormat,
-			Temp: temp,
-			Wind: wind,
-		 }
-
-		weatherArray = append(weatherArray, weatherItem)
-
-		if cityItem.City == "" {
-
-			layout := "02.01.2006 15:04 UTC"
-			timeUpdated, err := time.Parse(layout, item.UpdatedAtUTC)
-			
-			if err != nil {
-				return nil, err
-			}
-
-			timeUnix := timeUpdated.Unix()
-
-			cityItem = types.City{
-				City: item.City,
-				Country: strings.ToLower(item.CountyCode),
-				UpdatedAt: timeUnix,
-			}
-		}
-
-	}
-
-	cityItemFinal := types.City{
-		City: cityItem.City,
-		Country: cityItem.Country,
-		UpdatedAt: cityItem.UpdatedAt,
-		Weather: weatherArray,
-	}
-
-	return &cityItemFinal, nil
+    return &types.City{
+        City:     city.City,
+        Country:  city.Country,
+        UpdatedAt: city.UpdatedAt,
+        Weather:  weather,
+    }, nil
 }
