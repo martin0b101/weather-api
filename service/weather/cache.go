@@ -17,6 +17,9 @@ func init() {
 	go func() {
 		for {
 			time.Sleep(20 * time.Minute) 
+			cacheMutex.Lock()
+			cache = nil //clear cache
+			cacheMutex.Unlock()
 		}
 	}()
 }
