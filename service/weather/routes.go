@@ -43,6 +43,16 @@ func (h *Handler) handleGetWeather(c *gin.Context) {
 
 func (h *Handler) handleGetWeatherByCity(c *gin.Context){
 	cityFilter := c.Param("city")
+
+	if cityFilter == ""{
+		c.IndentedJSON(http.StatusInternalServerError, types.Response{
+			Status: http.StatusInternalServerError,
+			Error: true,
+			Data: struct{}{},
+		})
+		return
+	}
+
 	city, err := h.store.GetWeatherByCity(cityFilter)
 
 	if err != nil {

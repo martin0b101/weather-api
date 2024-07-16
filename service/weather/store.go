@@ -17,6 +17,11 @@ func NewWeatherStore() *Store {
 
 func (s *Store) GetAllWeather() ([]types.City, error){
 
+	
+	if cache != nil {
+		return *cache, nil
+	}
+
 	data, err := helper.LoadFile()
 
 	if err != nil{
@@ -35,10 +40,23 @@ func (s *Store) GetAllWeather() ([]types.City, error){
 		cities = append(cities, *cityParsed)
 	}
 
+	cacheMutex.Lock()
+	cache = &cities
+	cacheMutex.Unlock()
+
 	return cities, nil
 }
 
 func (s *Store) GetWeatherByCity(filterCity string) (*types.City, error){
+
+	
+	if cache != nil {
+		for _, item := range *cache{
+			if(item.City == filterCity){
+				return &item, nil
+			}
+		}
+	}
 
 	data, err := helper.LoadFile()
 
