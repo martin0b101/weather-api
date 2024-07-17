@@ -11,7 +11,7 @@ import (
 
 
 func main() {
-	server := api.NewApiServer("localhost:8080")
+	server := api.NewApiServer(":8080")
 	if err := server.Run(); err != nil {
 		log.Fatal(err)
 	}
